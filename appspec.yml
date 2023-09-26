@@ -2,6 +2,11 @@ version: 0.0
 os: linux
 hooks:
   ApplicationStart:
+    - location: codedeploy.sh  # Add this line for your new script
+      timeout: 300
+      runas: ubuntu
     - location: deploy.sh
       timeout: 300
       runas: ubuntu
+
+
