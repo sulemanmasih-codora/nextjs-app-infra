@@ -2,7 +2,7 @@
 
 
 cd /home/ubuntu/nextjs-app-infra
-git pull origin master
+git pull origin main
 nvm use v16
 yarn install &&
 yarn build &&
