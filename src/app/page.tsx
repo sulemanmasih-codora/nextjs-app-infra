@@ -18,9 +18,9 @@ export default function Home() {
           height={200}
         />
       </div>
-      <h2 className={inter.className}>
-           Welcome to 5minslearn!
-          </h2>
+      <h1 className={inter.className}>
+           Welcome to Codora!
+          </h1>
 
       <div className={styles.center}>
         
