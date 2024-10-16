@@ -42,7 +42,11 @@ jobs:
 
     - name: Debug AWS Secrets
       run: |
-        echo "AWS_ACCESS_KEY_ID: ${GITHUB_ENV.AWS_ACCESS_KEY_ID:-not set}"
+        if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+          echo "AWS_ACCESS_KEY_ID is not set"
+        else
+          echo "AWS_ACCESS_KEY_ID is set"
+        fi
 
     - name: Retrieve EC2 IP Address
       id: get_ip
