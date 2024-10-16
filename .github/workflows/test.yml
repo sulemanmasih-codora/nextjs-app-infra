@@ -11,10 +11,10 @@ on:
         default: 'false'
   pull_request:
     branches:
-      - main  # Trigger on pull requests targeting the main branch
+      - main
   push:
     branches:
-      - main  # Trigger when pushing to the main branch
+      - main
 
 jobs:
   get-ec2-ip:
@@ -44,14 +44,19 @@ jobs:
             ;;
         esac
 
-        echo "ENV_NAME=$ENV_NAME" >> $GITHUB_ENV  # Use new output method
+        echo "ENV_NAME=$ENV_NAME" >> $GITHUB_ENV
 
     - name: Set up AWS CLI (Same AWS Secrets for All Environments)
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: 'eu-west-1'  # Assuming region is stored in secrets as well
+        aws-region: 'eu-west-1'
+
+    - name: Debug AWS Secrets
+      run: |
+        echo "AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}"
+        echo "AWS_SECRET_ACCESS_KEY: (masked)"
 
     - name: Retrieve EC2 IP Address
       id: get_ip
@@ -71,7 +76,7 @@ jobs:
           --query "Reservations[*].Instances[*].PublicIpAddress" \
           --output text)
 
-        echo "IP_ADDRESS=$IP_ADDRESS" >> $GITHUB_ENV  # Use new output method
+        echo "IP_ADDRESS=$IP_ADDRESS" >> $GITHUB_ENV
 
     - name: Output IP Address
       run: |
