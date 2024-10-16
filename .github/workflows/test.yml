@@ -9,6 +9,13 @@ on:
       apply_changes:
         description: 'Apply changes (true/false)'
         default: 'false'
+  pull_request:
+    branches:
+      - main  # Trigger on pull requests targeting the main branch
+  push:
+    branches:
+      - main  # Trigger when pushing to the main branch
+
 jobs:
   get-ec2-ip:
     runs-on: ubuntu-latest
@@ -17,10 +24,8 @@ jobs:
     - name: Determine Environment
       id: determine_env
       run: |
-        # Extract environment name based on EC2 instance name
         EC2_INSTANCE_NAME="${{ github.event.inputs.ec2_instance_name }}"
         
-        # Assuming the EC2 name follows a pattern with environment as part of it
         case $EC2_INSTANCE_NAME in
           *lexim-dev*) ENV_NAME="lexim-dev" ;;
           *lexim-stage*) ENV_NAME="lexim-stage" ;;
@@ -38,11 +43,8 @@ jobs:
             exit 1
             ;;
         esac
-        
-        echo "Selected environment: $ENV_NAME"
-        
-        # Set output for ENV_NAME
-        echo "::set-output name=ENV_NAME::$ENV_NAME"
+
+        echo "ENV_NAME=$ENV_NAME" >> $GITHUB_ENV  # Use new output method
 
     - name: Set up AWS CLI (Same AWS Secrets for All Environments)
       uses: aws-actions/configure-aws-credentials@v2
@@ -69,12 +71,8 @@ jobs:
           --query "Reservations[*].Instances[*].PublicIpAddress" \
           --output text)
 
-        echo "IP Address of EC2 instance $INSTANCE_ID is $IP_ADDRESS"
-
-        # Set output for IP_ADDRESS
-        echo "::set-output name=IP_ADDRESS::$IP_ADDRESS"
+        echo "IP_ADDRESS=$IP_ADDRESS" >> $GITHUB_ENV  # Use new output method
 
     - name: Output IP Address
       run: |
-        IP_ADDRESS=${{ steps.get_ip.outputs.IP_ADDRESS }}
-        echo "The IP address is: $IP_ADDRESS"
+        echo "The IP address is: ${{ env.IP_ADDRESS }}"
