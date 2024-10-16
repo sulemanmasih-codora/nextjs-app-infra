@@ -9,31 +9,23 @@ on:
       apply_changes:
         description: 'Apply changes (true/false)'
         default: 'false'
+      environment_name:
+        description: 'The name of the environment (e.g., lexim-dev, lexim-stage)'
+        required: true
 
 jobs:
   get-ec2-ip:
     runs-on: ubuntu-latest
-    environment: lexim-dev  # Adjust this based on your actual environment
+    env: # Set environment variables based on the input
+      ENV_NAME: ${{ github.event.inputs.environment_name }}
 
     steps:
-    - name: Determine Environment
-      id: determine_env
+    - name: Debug Environment Name
       run: |
-        EC2_INSTANCE_NAME="${{ github.event.inputs.ec2_instance_name }}"
-        
-        case $EC2_INSTANCE_NAME in
-          *lexim-dev*) ENV_NAME="lexim-dev" ;;
-          *lexim-stage*) ENV_NAME="lexim-stage" ;;
-          # ... (other cases)
-          *) 
-            echo "Unknown environment for EC2 instance: $EC2_INSTANCE_NAME"
-            exit 1
-            ;;
-        esac
+        echo "Environment Name: $ENV_NAME"
+        echo "EC2 Instance Name: ${{ github.event.inputs.ec2_instance_name }}"
 
-        echo "ENV_NAME=$ENV_NAME" >> $GITHUB_ENV
-
-    - name: Set up AWS CLI (Same AWS Secrets for All Environments)
+    - name: Set up AWS CLI
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
