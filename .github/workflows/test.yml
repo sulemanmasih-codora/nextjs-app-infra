@@ -15,68 +15,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Determine Environment
-      id: determine_env
-      run: |
-        EC2_INSTANCE_NAME="${{ github.event.inputs.ec2_instance_name }}"
-        case $EC2_INSTANCE_NAME in
-          *lexim-dev*) ENV_NAME="lexim-dev" ;;
-          *lexim-stage*) ENV_NAME="lexim-stage" ;;
-          *lexim-prod*) ENV_NAME="lexim-prod" ;;
-          *) 
-            echo "Unknown environment for EC2 instance: $EC2_INSTANCE_NAME"
-            exit 1
-            ;;
-        esac
-        echo "ENV_NAME=$ENV_NAME" >> $GITHUB_ENV
+      - name: Determine Environment
+        id: determine_env
+        run: |
+          EC2_INSTANCE_NAME="${{ github.event.inputs.ec2_instance_name }}"
+          case $EC2_INSTANCE_NAME in
+            *lexim-dev*) ENV_NAME="lexim-dev" ;;
+            *lexim-stage*) ENV_NAME="lexim-stage" ;;
+            *lexim-prod*) ENV_NAME="lexim-prod" ;;
+            *) 
+              echo "Unknown environment for EC2 instance: $EC2_INSTANCE_NAME"
+              exit 1
+              ;;
+          esac
+          echo "ENV_NAME=$ENV_NAME" >> $GITHUB_ENV
 
-    - name: Debug AWS Secrets
-      run: |
-        if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
-          echo "AWS_ACCESS_KEY_ID is not set"
-        else
-          echo "AWS_ACCESS_KEY_ID is set"
-        fi
-        
-        if [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
-          echo "AWS_SECRET_ACCESS_KEY is not set"
-        else
-          echo "AWS_SECRET_ACCESS_KEY is set"
-        fi
-        
-        if [ -z "${{ secrets.AWS_REGION }}" ]; then
-          echo "AWS_REGION is not set"
-        else
-          echo "AWS_REGION is set"
-        fi
+      - name: Debug AWS Secrets
+        run: |
+          if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+            echo "AWS_ACCESS_KEY_ID is not set"
+          else
+            echo "AWS_ACCESS_KEY_ID is set"
+          fi
+          
+          if [ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
+            echo "AWS_SECRET_ACCESS_KEY is not set"
+          else
+            echo "AWS_SECRET_ACCESS_KEY is set"
+          fi
+          
+          if [ -z "${{ secrets.AWS_REGION }}" ]; then
+            echo "AWS_REGION is not set"
+          else
+            echo "AWS_REGION is set"
+          fi
 
-    - name: Set up AWS CLI (Using AWS Secrets)
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-
-    - name: Retrieve EC2 IP Address
-      id: get_ip
-      run: |
-        INSTANCE_ID=$(aws ec2 describe-instances \
-          --filters "Name=tag:Name,Values=${{ github.event.inputs.ec2_instance_name }}" \
-          --query "Reservations[*].Instances[*].InstanceId" \
-          --output text)
-
-        if [ -z "$INSTANCE_ID" ]; then
-          echo "EC2 instance with the name '${{ github.event.inputs.ec2_instance_name }}' not found"
-          exit 1
-        fi
-
-        IP_ADDRESS=$(aws ec2 describe-instances \
-          --instance-ids $INSTANCE_ID \
-          --query "Reservations[*].Instances[*].PublicIpAddress" \
-          --output text)
-
-        echo "IP_ADDRESS=$IP_ADDRESS" >> $GITHUB_ENV
-
-    - name: Output IP Address
-      run: |
-        echo "The IP address is: ${{ env.IP_ADDRESS }}"
+      - name: Set up AWS CLI (Using AWS Secrets)
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
