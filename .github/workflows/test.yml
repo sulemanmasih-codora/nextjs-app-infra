@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ENV_NAME: ${{ github.event.inputs.environment_name }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_REGION: 'eu-west-1'
 
     steps:
     - name: Debug AWS Region
@@ -35,7 +35,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-region: 'eu-west-1'
 
     - name: Retrieve EC2 IP Address
       id: get_ip
