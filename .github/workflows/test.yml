@@ -6,6 +6,9 @@ on:
       ec2_instance_name:
         description: 'The name of the EC2 instance'
         required: true
+      apply_changes:
+        description: 'Apply changes (true/false)'
+        default: 'false'
 
 jobs:
   get-ec2-ip:
