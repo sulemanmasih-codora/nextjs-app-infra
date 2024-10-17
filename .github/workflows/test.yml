@@ -9,9 +9,6 @@ on:
       apply_changes:
         description: 'Apply changes (true/false)'
         default: 'false'
-      environment:
-        description: 'The environment (e.g., lexim-dev, lexim-stage, lexim-prod)'
-        required: true
 
 jobs:
   get-ec2-ip:
@@ -34,6 +31,19 @@ jobs:
           echo "AWS_ACCESS_KEY_ID is set"
         fi
 
+    - name: Retrieve Environment from EC2 Instance Name
+      id: get_environment
+      run: |
+        EC2_INSTANCE_NAME="${{ github.event.inputs.ec2_instance_name }}"
+        # Use a broader set of environments to derive the environment
+        if [[ $EC2_INSTANCE_NAME =~ ^(dau-vault|lexim|tcp|custody|dbg)-([a-z]+)- ]]; then
+          ENVIRONMENT="${BASH_REMATCH[0]%-*}"  # Capture everything up to the last dash
+          echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
+        else
+          echo "No valid environment found in the EC2 instance name."
+          exit 1
+        fi
+
     - name: Retrieve EC2 IP Address
       id: get_ip
       run: |
@@ -54,6 +64,69 @@ jobs:
 
         echo "IP_ADDRESS=$IP_ADDRESS" >> $GITHUB_ENV
 
-    - name: Output IP Address
+    - name: Output Environment and IP Address
       run: |
+        echo "The environment is: ${{ env.ENVIRONMENT }}"
         echo "The IP address is: ${{ env.IP_ADDRESS }}"
+
+
+
+# name: Get EC2 IP Address
+
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       ec2_instance_name:
+#         description: 'The name of the EC2 instance'
+#         required: true
+#       apply_changes:
+#         description: 'Apply changes (true/false)'
+#         default: 'false'
+#       environment:
+#         description: 'The environment (e.g., lexim-dev, lexim-stage, lexim-prod)'
+#         required: true
+
+# jobs:
+#   get-ec2-ip:
+#     runs-on: ubuntu-latest
+#     environment: ${{ github.event.inputs.environment }}  # Use the input directly here
+
+#     steps:
+#     - name: Set up AWS CLI
+#       uses: aws-actions/configure-aws-credentials@v2
+#       with:
+#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}  # Assuming secrets are environment agnostic
+#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # Assuming secrets are environment agnostic
+#         aws-region: ${{ secrets.AWS_REGION }}  # Assuming secrets are environment agnostic
+
+#     - name: Debug AWS Secrets
+#       run: |
+#         if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+#           echo "AWS_ACCESS_KEY_ID is not set"
+#         else
+#           echo "AWS_ACCESS_KEY_ID is set"
+#         fi
+
+#     - name: Retrieve EC2 IP Address
+#       id: get_ip
+#       run: |
+#         INSTANCE_ID=$(aws ec2 describe-instances \
+#           --filters "Name=tag:Name,Values=${{ github.event.inputs.ec2_instance_name }}" \
+#           --query "Reservations[*].Instances[*].InstanceId" \
+#           --output text)
+
+#         if [ -z "$INSTANCE_ID" ]; then
+#           echo "EC2 instance with the name '${{ github.event.inputs.ec2_instance_name }}' not found"
+#           exit 1
+#         fi
+
+#         IP_ADDRESS=$(aws ec2 describe-instances \
+#           --instance-ids $INSTANCE_ID \
+#           --query "Reservations[*].Instances[*].PublicIpAddress" \
+#           --output text)
+
+#         echo "IP_ADDRESS=$IP_ADDRESS" >> $GITHUB_ENV
+
+#     - name: Output IP Address
+#       run: |
+#         echo "The IP address is: ${{ env.IP_ADDRESS }}"
