@@ -11,12 +11,14 @@ on:
         default: 'false'
 
 jobs:
-  get-ec2-ip:
+  determine-environment:
     runs-on: ubuntu-latest
-    environment: ${{ env.ENVIRONMENT }}
+    outputs:
+      environment: ${{ steps.set_env.outputs.environment }}
+
     steps:
     - name: Determine Environment from EC2 Instance Name
-      id: determine_env
+      id: set_env
       run: |
         EC2_INSTANCE_NAME=${{ github.event.inputs.ec2_instance_name }}
         case $EC2_INSTANCE_NAME in
@@ -34,14 +36,20 @@ jobs:
           lexim-prod-dxb-bastion-host) ENVIRONMENT="lexim-prod-dxb" ;;
           *) echo "No matching environment found for the EC2 instance name: $EC2_INSTANCE_NAME"; exit 1 ;;
         esac
-        echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
+        echo "environment=${ENVIRONMENT}" >> $GITHUB_ENV
+        echo "::set-output name=environment::$ENVIRONMENT"
         echo "Environment determined as: $ENVIRONMENT"
 
+  get-ec2-ip:
+    runs-on: ubuntu-latest
+    needs: determine-environment
+    environment: ${{ needs.determine-environment.outputs.environment }}
+
+    steps:
     - name: Set up AWS CLI for the determined environment
       id: aws_setup
       run: |
-        # Fetch AWS credentials based on the determined environment
-        echo "Fetching secrets for the environment: ${{ env.ENVIRONMENT }}"
+        echo "Fetching secrets for the environment: ${{ needs.determine-environment.outputs.environment }}"
         echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
         echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
         echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
@@ -73,4 +81,4 @@ jobs:
     - name: Output IP Address
       run: |
         echo "The IP address is: ${{ env.IP_ADDRESS }}"
-        echo "The environment is: ${{ env.ENVIRONMENT }}"
+        echo "The environment is: ${{ needs.determine-environment.outputs.environment }}"
