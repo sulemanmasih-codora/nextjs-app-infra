@@ -10,7 +10,7 @@ on:
         description: 'Apply changes (true/false)'
         default: 'false'
       environment:
-        description: 'The environment (e.g., dev, stage, prod)'
+        description: 'The environment (e.g., lexim-dev, lexim-stage, lexim-prod)'
         required: true
 
 jobs:
