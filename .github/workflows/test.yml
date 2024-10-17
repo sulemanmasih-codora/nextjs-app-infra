@@ -13,7 +13,7 @@ on:
 jobs:
   get-ec2-ip:
     runs-on: ubuntu-latest
-
+    environment: ${{ env.ENVIRONMENT }}
     steps:
     - name: Determine Environment from EC2 Instance Name
       id: determine_env
