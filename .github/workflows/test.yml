@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     env: # Set environment variables based on the input
       ENV_NAME: ${{ github.event.inputs.environment_name }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}  # Add the AWS_REGION variable here
+      AWS_REGION: ${{ secrets.AWS_REGION }}
 
     steps:
     - name: Debug Environment Name
@@ -31,7 +31,7 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}  # Ensure the AWS region is set here
+        aws-region: ${{ secrets.AWS_REGION }}  # Set the AWS region here
 
     - name: Debug AWS Secrets
       run: |
