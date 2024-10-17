@@ -16,30 +16,26 @@ on:
 jobs:
   get-ec2-ip:
     runs-on: ubuntu-latest
-    env: # Set environment variables based on the input
+    env:
       ENV_NAME: ${{ github.event.inputs.environment_name }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
 
     steps:
-    - name: Debug Environment Name
+    - name: Debug AWS Region
       run: |
-        echo "Environment Name: $ENV_NAME"
-        echo "EC2 Instance Name: ${{ github.event.inputs.ec2_instance_name }}"
+        if [ -z "${{ secrets.AWS_REGION }}" ]; then
+          echo "AWS_REGION secret is not set!"
+          exit 1
+        else
+          echo "AWS_REGION secret is set to: ${{ secrets.AWS_REGION }}"
+        fi
 
     - name: Set up AWS CLI
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}  # Set the AWS region here
-
-    - name: Debug AWS Secrets
-      run: |
-        if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
-          echo "AWS_ACCESS_KEY_ID is not set"
-        else
-          echo "AWS_ACCESS_KEY_ID is set"
-        fi
+        aws-region: ${{ secrets.AWS_REGION }}
 
     - name: Retrieve EC2 IP Address
       id: get_ip
