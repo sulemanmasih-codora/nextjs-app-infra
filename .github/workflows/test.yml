@@ -77,8 +77,15 @@ jobs:
           --query "Reservations[*].Instances[*].PublicIpAddress" \
           --output text)
         echo "IP_ADDRESS=$IP_ADDRESS" >> $GITHUB_ENV
+        echo "$IP_ADDRESS" > ec2_ip_address.txt  # Create a file with the IP address
 
     - name: Output IP Address
       run: |
         echo "The IP address is: ${{ env.IP_ADDRESS }}"
         echo "The environment is: ${{ needs.determine-environment.outputs.environment }}"
+
+    - name: Upload IP Address as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ec2-ip-address
+        path: ec2_ip_address.txt
