@@ -9,29 +9,43 @@ on:
       apply_changes:
         description: 'Apply changes (true/false)'
         default: 'false'
-      environment_name:
-        description: 'The name of the environment (e.g., lexim-dev, lexim-stage)'
-        required: true
 
 jobs:
   get-ec2-ip:
     runs-on: ubuntu-latest
-    env:
-      ENV_NAME: ${{ github.event.inputs.environment_name }}
-      AWS_REGION: 'eu-west-1'
+    environment: lexim-dev  # Adjust this based on your actual environment
 
     steps:
-    - name: Set up AWS CLI
+    - name: Determine Environment
+      id: determine_env
+      run: |
+        EC2_INSTANCE_NAME="${{ github.event.inputs.ec2_instance_name }}"
+        
+        case $EC2_INSTANCE_NAME in
+          *lexim-dev*) ENV_NAME="lexim-dev" ;;
+          *lexim-stage*) ENV_NAME="lexim-stage" ;;
+          # ... (other cases)
+          *) 
+            echo "Unknown environment for EC2 instance: $EC2_INSTANCE_NAME"
+            exit 1
+            ;;
+        esac
+        echo "ENV_NAME=$ENV_NAME" >> $GITHUB_ENV
+    - name: Set up AWS CLI (Same AWS Secrets for All Environments)
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: 'eu-west-1'
+        # aws-region: 'eu-west-1'
+        aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Debug AWS CLI credentials
+    - name: Debug AWS Secrets
       run: |
-        aws sts get-caller-identity
-
+        if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+          echo "AWS_ACCESS_KEY_ID is not set"
+        else
+          echo "AWS_ACCESS_KEY_ID is set"
+        fi
     - name: Retrieve EC2 IP Address
       id: get_ip
       run: |
@@ -44,14 +58,11 @@ jobs:
           echo "EC2 instance with the name '${{ github.event.inputs.ec2_instance_name }}' not found"
           exit 1
         fi
-
         IP_ADDRESS=$(aws ec2 describe-instances \
           --instance-ids $INSTANCE_ID \
           --query "Reservations[*].Instances[*].PublicIpAddress" \
           --output text)
-
         echo "IP_ADDRESS=$IP_ADDRESS" >> $GITHUB_ENV
-
     - name: Output IP Address
       run: |
         echo "The IP address is: ${{ env.IP_ADDRESS }}"
