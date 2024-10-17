@@ -20,16 +20,7 @@ jobs:
       ENV_NAME: ${{ github.event.inputs.environment_name }}
       AWS_REGION: 'eu-west-1'
 
-    steps:
-    - name: Debug AWS Region
-      run: |
-        if [ -z "${{ secrets.AWS_REGION }}" ]; then
-          echo "AWS_REGION secret is not set!"
-          exit 1
-        else
-          echo "AWS_REGION secret is set to: ${{ secrets.AWS_REGION }}"
-        fi
-
+    steps: # Steps should be listed inside the jobs section
     - name: Set up AWS CLI
       uses: aws-actions/configure-aws-credentials@v2
       with:
